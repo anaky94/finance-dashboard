@@ -16,6 +16,7 @@ export default function Depenses() {
   const [form, setForm] = useState({ date: today(), libelle: '', categorie: 'autre', montant: '', mode: '💳 Carte bleue', notes: '' })
   const [loading, setLoading] = useState(false)
   const [editId, setEditId] = useState(null)
+  const [error, setError] = useState(null)
 
   const load = async () => {
     const { data } = await supabase.from('depenses').select('*').eq('mois', mois).eq('annee', annee).order('date', { ascending: false })
@@ -32,13 +33,20 @@ export default function Depenses() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setError(null)
     const d = new Date(form.date)
     const row = { ...form, montant: parseFloat(form.montant), mois: d.getMonth() + 1, annee: d.getFullYear() }
+    let result
     if (editId) {
-      await supabase.from('depenses').update(row).eq('id', editId)
+      result = await supabase.from('depenses').update(row).eq('id', editId)
       setEditId(null)
     } else {
-      await supabase.from('depenses').insert([row])
+      result = await supabase.from('depenses').insert([row])
+    }
+    if (result.error) {
+      setError(result.error.message)
+      setLoading(false)
+      return
     }
     setForm({ date: today(), libelle: '', categorie: 'autre', montant: '', mode: '💳 Carte bleue', notes: '' })
     setLoading(false)
@@ -60,6 +68,12 @@ export default function Depenses() {
   return (
     <div className="p-6 space-y-6">
       <h2 className="text-2xl font-bold text-white">💸 Dépenses</h2>
+
+      {error && (
+        <div className="bg-red-900/50 border border-red-500 text-red-300 rounded-lg px-4 py-3 text-sm">
+          ❌ Erreur : {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="bg-slate-800 rounded-xl p-5 grid grid-cols-2 md:grid-cols-6 gap-3">
         <div className="col-span-1">
