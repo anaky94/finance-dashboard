@@ -25,10 +25,20 @@ export default function Dashboard() {
     })
   }, [mois, annee])
 
+  const [liquidites, setLiquidites] = useState(0)
+
+  useEffect(() => {
+    supabase.from('liquidites_pea').select('*').single().then(({ data }) => {
+      if (data) setLiquidites(data.montant)
+    })
+  }, [])
+
   const totalDepenses = depenses.reduce((s, d) => s + Number(d.montant), 0)
   const totalRevenus = revenus.reduce((s, r) => s + Number(r.montant), 0)
   const solde = totalRevenus - totalDepenses
   const totalTitres = portfolio.reduce((s, p) => s + p.quantite * p.cours_actuel, 0)
+  const totalPV = portfolio.reduce((s, p) => s + p.quantite * (p.cours_actuel - p.pru), 0)
+  const totalPEA = totalTitres + Number(liquidites)
 
   const budgetData = CATEGORIES.map(cat => {
     const depense = depenses.filter(d => d.categorie === cat.id).reduce((s, d) => s + Number(d.montant), 0)
@@ -61,7 +71,7 @@ export default function Dashboard() {
         <StatCard label="💸 Dépenses" value={`${totalDepenses.toFixed(2)} €`} color="text-red-400" />
         <StatCard label="💰 Revenus" value={`${totalRevenus.toFixed(2)} €`} color="text-green-400" />
         <StatCard label="⚖️ Solde" value={`${solde.toFixed(2)} €`} color={solde >= 0 ? 'text-green-400' : 'text-red-400'} />
-        <StatCard label="📈 Portefeuille" value={`${totalTitres.toFixed(2)} €`} color="text-indigo-400" />
+        <StatCard label="💼 PEA Total" value={`${totalPEA.toFixed(2)} €`} color="text-indigo-400" />
       </div>
 
       <div className="grid grid-cols-2 gap-6">
@@ -96,6 +106,47 @@ export default function Dashboard() {
             ))}
             {depenses.length === 0 && <p className="text-slate-500 text-sm">Aucune dépense ce mois</p>}
           </div>
+        </div>
+      </div>
+
+      <div className="bg-slate-800 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-slate-300">📈 Portefeuille PEA</h3>
+          <div className="flex gap-4 text-xs">
+            <span className="text-slate-400">Titres : <span className="text-white font-semibold">{totalTitres.toFixed(2)} €</span></span>
+            <span className="text-slate-400">Liquidités : <span className="text-white font-semibold">{Number(liquidites).toFixed(2)} €</span></span>
+            <span className="text-slate-400">+/- latent : <span className={`font-semibold ${totalPV >= 0 ? 'text-green-400' : 'text-red-400'}`}>{totalPV >= 0 ? '+' : ''}{totalPV.toFixed(2)} €</span></span>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-700">
+                {['Ticker', 'Nom', 'Qté', 'Cours (€)', 'PRU (€)', 'Valeur (€)', '+/- €', '+/- %'].map(h => (
+                  <th key={h} className="text-left text-xs text-slate-400 font-medium px-3 py-2">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {portfolio.map(p => {
+                const val = p.quantite * p.cours_actuel
+                const pv = p.quantite * (p.cours_actuel - p.pru)
+                const pct = ((p.cours_actuel - p.pru) / p.pru) * 100
+                return (
+                  <tr key={p.ticker} className="border-b border-slate-700/50">
+                    <td className="px-3 py-2.5 text-indigo-400 font-bold">{p.ticker}</td>
+                    <td className="px-3 py-2.5 text-white">{p.nom}</td>
+                    <td className="px-3 py-2.5 text-slate-300">{p.quantite}</td>
+                    <td className="px-3 py-2.5 text-white">{Number(p.cours_actuel).toFixed(2)}</td>
+                    <td className="px-3 py-2.5 text-slate-400">{Number(p.pru).toFixed(2)}</td>
+                    <td className="px-3 py-2.5 text-white font-semibold">{val.toFixed(2)}</td>
+                    <td className={`px-3 py-2.5 font-semibold ${pv >= 0 ? 'text-green-400' : 'text-red-400'}`}>{pv >= 0 ? '+' : ''}{pv.toFixed(2)}</td>
+                    <td className={`px-3 py-2.5 ${pct >= 0 ? 'text-green-400' : 'text-red-400'}`}>{pct >= 0 ? '+' : ''}{pct.toFixed(2)}%</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
