@@ -42,13 +42,13 @@ export default function Revenus() {
     <div className="p-6 space-y-6">
       <h2 className="text-2xl font-bold text-white">💰 Revenus</h2>
 
-      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-xl p-5 grid grid-cols-5 gap-3">
+      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-xl p-5 grid grid-cols-2 md:grid-cols-5 gap-3">
         <div>
           <label className="text-xs text-slate-400 block mb-1">Date</label>
           <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white" required />
         </div>
-        <div className="col-span-2">
+        <div className="col-span-1 md:col-span-2">
           <label className="text-xs text-slate-400 block mb-1">Libellé</label>
           <input type="text" value={form.libelle} onChange={e => setForm(f => ({ ...f, libelle: e.target.value }))} placeholder="ex: Virement client"
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white" required />
@@ -65,12 +65,12 @@ export default function Revenus() {
             {CATS.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
-        <div className="col-span-4">
+        <div className="col-span-2 md:col-span-4">
           <label className="text-xs text-slate-400 block mb-1">Notes</label>
           <input type="text" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white" />
         </div>
-        <div className="flex items-end">
+        <div className="col-span-2 md:col-span-1 flex items-end">
           <button type="submit" disabled={loading}
             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg px-4 py-2 text-sm transition-colors disabled:opacity-50">
             + Ajouter

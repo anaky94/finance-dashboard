@@ -10,7 +10,7 @@ export default function App() {
     <BrowserRouter>
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto pt-14 md:pt-0">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/depenses" element={<Depenses />} />

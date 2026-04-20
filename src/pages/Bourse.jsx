@@ -48,15 +48,15 @@ export default function Bourse() {
     <div className="p-6 space-y-6">
       <h2 className="text-2xl font-bold text-white">📈 Portefeuille PEA</h2>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="📈 Titres" value={`${totalTitres.toFixed(2)} €`} />
         <StatCard label="💧 Liquidités" value={`${Number(liquidites).toFixed(2)} €`} />
         <StatCard label="💼 Total PEA" value={`${(totalTitres + Number(liquidites)).toFixed(2)} €`} color="text-indigo-400" />
         <StatCard label={totalPV >= 0 ? '✅ +/- latent' : '❌ +/- latent'} value={`${totalPV >= 0 ? '+' : ''}${totalPV.toFixed(2)} €`} color={totalPV >= 0 ? 'text-green-400' : 'text-red-400'} />
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 bg-slate-800 rounded-xl overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="col-span-1 md:col-span-2 bg-slate-800 rounded-xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-700">

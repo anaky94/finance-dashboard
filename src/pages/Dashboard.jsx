@@ -67,14 +67,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="💸 Dépenses" value={`${totalDepenses.toFixed(2)} €`} color="text-red-400" />
         <StatCard label="💰 Revenus" value={`${totalRevenus.toFixed(2)} €`} color="text-green-400" />
         <StatCard label="⚖️ Solde" value={`${solde.toFixed(2)} €`} color={solde >= 0 ? 'text-green-400' : 'text-red-400'} />
         <StatCard label="💼 PEA Total" value={`${totalPEA.toFixed(2)} €`} color="text-indigo-400" />
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-slate-800 rounded-xl p-5">
           <h3 className="text-sm font-semibold text-slate-300 mb-4">🎯 Budget par catégorie</h3>
           <ResponsiveContainer width="100%" height={220}>
