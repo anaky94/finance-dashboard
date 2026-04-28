@@ -66,7 +66,7 @@ export default function Depenses() {
   const total = depenses.reduce((s, d) => s + Number(d.montant), 0)
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
       <h2 className="text-2xl font-bold text-white">💸 Dépenses</h2>
 
       {error && (
@@ -75,44 +75,44 @@ export default function Depenses() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-xl p-5 grid grid-cols-2 md:grid-cols-6 gap-3">
-        <div className="col-span-1">
+      <form onSubmit={handleSubmit} className="bg-slate-800 rounded-xl p-4 md:p-5 grid grid-cols-1 md:grid-cols-6 gap-3">
+        <div className="md:col-span-1">
           <label className="text-xs text-slate-400 block mb-1">Date</label>
           <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white" required />
         </div>
-        <div className="col-span-1 md:col-span-2">
+        <div className="md:col-span-2">
           <label className="text-xs text-slate-400 block mb-1">Libellé</label>
           <input type="text" value={form.libelle} onChange={e => handleLibelleChange(e.target.value)} placeholder="ex: KFC Chambéry"
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white" required />
         </div>
-        <div className="col-span-1">
+        <div className="md:col-span-1">
           <label className="text-xs text-slate-400 block mb-1">Catégorie</label>
           <select value={form.categorie} onChange={e => setForm(f => ({ ...f, categorie: e.target.value }))}
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white">
             {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
           </select>
         </div>
-        <div className="col-span-1">
+        <div className="md:col-span-1">
           <label className="text-xs text-slate-400 block mb-1">Montant (€)</label>
           <input type="number" step="0.01" min="0" value={form.montant} onChange={e => setForm(f => ({ ...f, montant: e.target.value }))}
             placeholder="0.00" className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white" required />
         </div>
-        <div className="col-span-1">
+        <div className="md:col-span-1">
           <label className="text-xs text-slate-400 block mb-1">Mode</label>
           <select value={form.mode} onChange={e => setForm(f => ({ ...f, mode: e.target.value }))}
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white">
             {MODES.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
-        <div className="col-span-2 md:col-span-5">
+        <div className="md:col-span-5">
           <label className="text-xs text-slate-400 block mb-1">Notes (optionnel)</label>
           <input type="text" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white" />
         </div>
-        <div className="col-span-2 md:col-span-1 flex items-end">
+        <div className="md:col-span-1 flex items-end">
           <button type="submit" disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg px-4 py-2 text-sm transition-colors disabled:opacity-50">
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg px-4 py-2.5 text-sm transition-colors disabled:opacity-50">
             {editId ? 'Modifier' : '+ Ajouter'}
           </button>
         </div>
@@ -132,7 +132,32 @@ export default function Depenses() {
         <span className="text-red-400 font-bold">Total : {total.toFixed(2)} €</span>
       </div>
 
-      <div className="bg-slate-800 rounded-xl overflow-hidden">
+      {/* Mobile : cartes */}
+      <div className="md:hidden space-y-3">
+        {depenses.map(d => (
+          <div key={d.id} className="bg-slate-800 rounded-xl p-4 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="text-white font-medium break-words">{d.libelle}</div>
+                <div className="text-xs text-slate-400 mt-0.5">{d.date} · {getCategoryLabel(d.categorie)}</div>
+              </div>
+              <div className="text-red-400 font-bold whitespace-nowrap">{Number(d.montant).toFixed(2)} €</div>
+            </div>
+            <div className="text-xs text-slate-400">{d.mode}</div>
+            {d.notes && <div className="text-xs text-slate-500 italic break-words">{d.notes}</div>}
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => handleEdit(d)} className="flex-1 text-white text-sm px-3 py-2 rounded-lg bg-slate-700 active:bg-slate-600">✏️ Modifier</button>
+              <button onClick={() => handleDelete(d.id)} className="flex-1 text-white text-sm px-3 py-2 rounded-lg bg-red-600/80 active:bg-red-700">🗑️ Supprimer</button>
+            </div>
+          </div>
+        ))}
+        {depenses.length === 0 && (
+          <div className="bg-slate-800 rounded-xl px-4 py-8 text-center text-slate-500">Aucune dépense pour ce mois</div>
+        )}
+      </div>
+
+      {/* Desktop : tableau */}
+      <div className="hidden md:block bg-slate-800 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-700">
