@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { CATEGORIES, getCategoryLabel } from '../lib/categories'
+import { PROPRIETAIRES } from '../lib/proprietaires'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 const MOIS_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc']
@@ -9,6 +10,7 @@ export default function Dashboard() {
   const now = new Date()
   const [mois, setMois] = useState(now.getMonth() + 1)
   const [annee, setAnnee] = useState(now.getFullYear())
+  const [filtreProp, setFiltreProp] = useState('tous')
   const [depenses, setDepenses] = useState([])
   const [revenus, setRevenus] = useState([])
   const [portfolio, setPortfolio] = useState([])
@@ -33,23 +35,27 @@ export default function Dashboard() {
     })
   }, [])
 
-  const totalDepenses = depenses.reduce((s, d) => s + Number(d.montant), 0)
-  const totalRevenus = revenus.reduce((s, r) => s + Number(r.montant), 0)
+  const filtrer = (rows) => filtreProp === 'tous' ? rows : rows.filter(r => (r.proprietaire ?? 'konan') === filtreProp)
+  const depensesFiltrees = filtrer(depenses)
+  const revenusFiltres = filtrer(revenus)
+
+  const totalDepenses = depensesFiltrees.reduce((s, d) => s + Number(d.montant), 0)
+  const totalRevenus = revenusFiltres.reduce((s, r) => s + Number(r.montant), 0)
   const solde = totalRevenus - totalDepenses
   const totalTitres = portfolio.reduce((s, p) => s + p.quantite * p.cours_actuel, 0)
   const totalPV = portfolio.reduce((s, p) => s + p.quantite * (p.cours_actuel - p.pru), 0)
   const totalPEA = totalTitres + Number(liquidites)
 
   const budgetData = CATEGORIES.map(cat => {
-    const depense = depenses.filter(d => d.categorie === cat.id).reduce((s, d) => s + Number(d.montant), 0)
+    const depense = depensesFiltrees.filter(d => d.categorie === cat.id).reduce((s, d) => s + Number(d.montant), 0)
     return { name: cat.label.split(' ').slice(1).join(' '), budget: cat.budget, depense: parseFloat(depense.toFixed(2)) }
   }).filter(c => c.budget > 0 || c.depense > 0)
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-2xl font-bold text-white">Tableau de bord</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <select
             value={mois}
             onChange={e => setMois(Number(e.target.value))}
@@ -63,6 +69,14 @@ export default function Dashboard() {
             className="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-1.5 text-sm"
           >
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <select
+            value={filtreProp}
+            onChange={e => setFiltreProp(e.target.value)}
+            className="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-1.5 text-sm"
+          >
+            <option value="tous">👥 Tous</option>
+            {PROPRIETAIRES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
         </div>
       </div>
@@ -95,7 +109,7 @@ export default function Dashboard() {
         <div className="bg-slate-800 rounded-xl p-5">
           <h3 className="text-sm font-semibold text-slate-300 mb-3">💸 Dernières dépenses</h3>
           <div className="space-y-2">
-            {depenses.slice(-8).reverse().map(d => (
+            {depensesFiltrees.slice(-8).reverse().map(d => (
               <div key={d.id} className="flex items-center justify-between text-sm">
                 <div>
                   <span className="text-white font-medium">{d.libelle}</span>
@@ -104,7 +118,7 @@ export default function Dashboard() {
                 <span className="text-red-400 font-semibold">{Number(d.montant).toFixed(2)} €</span>
               </div>
             ))}
-            {depenses.length === 0 && <p className="text-slate-500 text-sm">Aucune dépense ce mois</p>}
+            {depensesFiltrees.length === 0 && <p className="text-slate-500 text-sm">Aucune dépense ce mois</p>}
           </div>
         </div>
       </div>

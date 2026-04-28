@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { CATEGORIES, guessCategory, getCategoryLabel } from '../lib/categories'
+import { PROPRIETAIRES, getProprietaire } from '../lib/proprietaires'
 
 const MODES = ['💳 Carte bleue', '🏦 Virement', '📱 Sans contact', '💵 Espèces']
 const MOIS_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc']
@@ -13,7 +14,8 @@ export default function Depenses() {
   const [mois, setMois] = useState(curMois())
   const [annee, setAnnee] = useState(curAnnee())
   const [depenses, setDepenses] = useState([])
-  const [form, setForm] = useState({ date: today(), libelle: '', categorie: 'autre', montant: '', mode: '💳 Carte bleue', notes: '' })
+  const [filtreProp, setFiltreProp] = useState('tous')
+  const [form, setForm] = useState({ date: today(), libelle: '', categorie: 'autre', montant: '', mode: '💳 Carte bleue', notes: '', proprietaire: 'konan' })
   const [loading, setLoading] = useState(false)
   const [editId, setEditId] = useState(null)
   const [error, setError] = useState(null)
@@ -48,7 +50,7 @@ export default function Depenses() {
       setLoading(false)
       return
     }
-    setForm({ date: today(), libelle: '', categorie: 'autre', montant: '', mode: '💳 Carte bleue', notes: '' })
+    setForm({ date: today(), libelle: '', categorie: 'autre', montant: '', mode: '💳 Carte bleue', notes: '', proprietaire: 'konan' })
     setLoading(false)
     load()
   }
@@ -60,10 +62,11 @@ export default function Depenses() {
 
   const handleEdit = (d) => {
     setEditId(d.id)
-    setForm({ date: d.date, libelle: d.libelle, categorie: d.categorie, montant: String(d.montant), mode: d.mode, notes: d.notes ?? '' })
+    setForm({ date: d.date, libelle: d.libelle, categorie: d.categorie, montant: String(d.montant), mode: d.mode, notes: d.notes ?? '', proprietaire: d.proprietaire ?? 'konan' })
   }
 
-  const total = depenses.reduce((s, d) => s + Number(d.montant), 0)
+  const depensesFiltrees = filtreProp === 'tous' ? depenses : depenses.filter(d => (d.proprietaire ?? 'konan') === filtreProp)
+  const total = depensesFiltrees.reduce((s, d) => s + Number(d.montant), 0)
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
@@ -105,7 +108,14 @@ export default function Depenses() {
             {MODES.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
-        <div className="md:col-span-5">
+        <div className="md:col-span-1">
+          <label className="text-xs text-slate-400 block mb-1">Pour qui</label>
+          <select value={form.proprietaire} onChange={e => setForm(f => ({ ...f, proprietaire: e.target.value }))}
+            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white">
+            {PROPRIETAIRES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+          </select>
+        </div>
+        <div className="md:col-span-4">
           <label className="text-xs text-slate-400 block mb-1">Notes (optionnel)</label>
           <input type="text" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
             className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white" />
@@ -118,8 +128,8 @@ export default function Depenses() {
         </div>
       </form>
 
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
           <select value={mois} onChange={e => setMois(Number(e.target.value))}
             className="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-1.5 text-sm">
             {MOIS_LABELS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
@@ -128,30 +138,41 @@ export default function Depenses() {
             className="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-1.5 text-sm">
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
+          <select value={filtreProp} onChange={e => setFiltreProp(e.target.value)}
+            className="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-1.5 text-sm">
+            <option value="tous">👥 Tous</option>
+            {PROPRIETAIRES.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+          </select>
         </div>
         <span className="text-red-400 font-bold">Total : {total.toFixed(2)} €</span>
       </div>
 
       {/* Mobile : cartes */}
       <div className="md:hidden space-y-3">
-        {depenses.map(d => (
-          <div key={d.id} className="bg-slate-800 rounded-xl p-4 space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="text-white font-medium break-words">{d.libelle}</div>
-                <div className="text-xs text-slate-400 mt-0.5">{d.date} · {getCategoryLabel(d.categorie)}</div>
+        {depensesFiltrees.map(d => {
+          const prop = getProprietaire(d.proprietaire ?? 'konan')
+          return (
+            <div key={d.id} className="bg-slate-800 rounded-xl p-4 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-white font-medium break-words">{d.libelle}</div>
+                  <div className="text-xs text-slate-400 mt-0.5">{d.date} · {getCategoryLabel(d.categorie)}</div>
+                </div>
+                <div className="text-red-400 font-bold whitespace-nowrap">{Number(d.montant).toFixed(2)} €</div>
               </div>
-              <div className="text-red-400 font-bold whitespace-nowrap">{Number(d.montant).toFixed(2)} €</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-xs px-2 py-0.5 rounded border ${prop.color}`}>{prop.label}</span>
+                <span className="text-xs text-slate-400">{d.mode}</span>
+              </div>
+              {d.notes && <div className="text-xs text-slate-500 italic break-words">{d.notes}</div>}
+              <div className="flex gap-2 pt-1">
+                <button onClick={() => handleEdit(d)} className="flex-1 text-white text-sm px-3 py-2 rounded-lg bg-slate-700 active:bg-slate-600">✏️ Modifier</button>
+                <button onClick={() => handleDelete(d.id)} className="flex-1 text-white text-sm px-3 py-2 rounded-lg bg-red-600/80 active:bg-red-700">🗑️ Supprimer</button>
+              </div>
             </div>
-            <div className="text-xs text-slate-400">{d.mode}</div>
-            {d.notes && <div className="text-xs text-slate-500 italic break-words">{d.notes}</div>}
-            <div className="flex gap-2 pt-1">
-              <button onClick={() => handleEdit(d)} className="flex-1 text-white text-sm px-3 py-2 rounded-lg bg-slate-700 active:bg-slate-600">✏️ Modifier</button>
-              <button onClick={() => handleDelete(d.id)} className="flex-1 text-white text-sm px-3 py-2 rounded-lg bg-red-600/80 active:bg-red-700">🗑️ Supprimer</button>
-            </div>
-          </div>
-        ))}
-        {depenses.length === 0 && (
+          )
+        })}
+        {depensesFiltrees.length === 0 && (
           <div className="bg-slate-800 rounded-xl px-4 py-8 text-center text-slate-500">Aucune dépense pour ce mois</div>
         )}
       </div>
@@ -161,27 +182,31 @@ export default function Depenses() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-700">
-              {['Date', 'Libellé', 'Catégorie', 'Montant', 'Mode', ''].map(h => (
+              {['Date', 'Libellé', 'Catégorie', 'Montant', 'Mode', 'Pour', ''].map(h => (
                 <th key={h} className="text-left text-xs text-slate-400 font-medium px-4 py-3">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {depenses.map(d => (
-              <tr key={d.id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
-                <td className="px-4 py-3 text-slate-300">{d.date}</td>
-                <td className="px-4 py-3 text-white font-medium">{d.libelle}</td>
-                <td className="px-4 py-3 text-slate-300">{getCategoryLabel(d.categorie)}</td>
-                <td className="px-4 py-3 text-red-400 font-semibold">{Number(d.montant).toFixed(2)} €</td>
-                <td className="px-4 py-3 text-slate-400">{d.mode}</td>
-                <td className="px-4 py-3 flex gap-2">
-                  <button onClick={() => handleEdit(d)} className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded border border-slate-600 hover:border-slate-400 transition-colors">✏️</button>
-                  <button onClick={() => handleDelete(d.id)} className="text-slate-400 hover:text-red-400 text-xs px-2 py-1 rounded border border-slate-600 hover:border-red-500 transition-colors">🗑️</button>
-                </td>
-              </tr>
-            ))}
-            {depenses.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">Aucune dépense pour ce mois</td></tr>
+            {depensesFiltrees.map(d => {
+              const prop = getProprietaire(d.proprietaire ?? 'konan')
+              return (
+                <tr key={d.id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+                  <td className="px-4 py-3 text-slate-300">{d.date}</td>
+                  <td className="px-4 py-3 text-white font-medium">{d.libelle}</td>
+                  <td className="px-4 py-3 text-slate-300">{getCategoryLabel(d.categorie)}</td>
+                  <td className="px-4 py-3 text-red-400 font-semibold">{Number(d.montant).toFixed(2)} €</td>
+                  <td className="px-4 py-3 text-slate-400">{d.mode}</td>
+                  <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded border ${prop.color}`}>{prop.label}</span></td>
+                  <td className="px-4 py-3 flex gap-2">
+                    <button onClick={() => handleEdit(d)} className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded border border-slate-600 hover:border-slate-400 transition-colors">✏️</button>
+                    <button onClick={() => handleDelete(d.id)} className="text-slate-400 hover:text-red-400 text-xs px-2 py-1 rounded border border-slate-600 hover:border-red-500 transition-colors">🗑️</button>
+                  </td>
+                </tr>
+              )
+            })}
+            {depensesFiltrees.length === 0 && (
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">Aucune dépense pour ce mois</td></tr>
             )}
           </tbody>
         </table>

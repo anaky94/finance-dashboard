@@ -9,6 +9,7 @@ create table if not exists depenses (
   montant numeric(10,2) not null,
   mode text,
   notes text,
+  proprietaire text not null default 'konan',
   mois int not null,
   annee int not null,
   created_at timestamptz default now()
@@ -21,6 +22,7 @@ create table if not exists revenus (
   montant numeric(10,2) not null,
   categorie text,
   notes text,
+  proprietaire text not null default 'konan',
   mois int not null,
   annee int not null,
   created_at timestamptz default now()
