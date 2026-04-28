@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 
 const links = [
   { to: '/', icon: '📊', label: 'Dashboard' },
@@ -15,7 +15,7 @@ export default function Sidebar() {
     <>
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-4 py-3">
-        <span className="text-white font-bold">💰 Mes Finances</span>
+        <Link to="/" onClick={() => setOpen(false)} className="text-white font-bold active:text-indigo-400">💰 Mes Finances</Link>
         <button onClick={() => setOpen(o => !o)} className="text-slate-400 hover:text-white text-2xl leading-none">
           {open ? '✕' : '☰'}
         </button>
